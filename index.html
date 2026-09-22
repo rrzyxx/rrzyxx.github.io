@@ -8,16 +8,16 @@
     <p>Send me an email directly using the form below.</p>
 
     <form action="https://formspree.io" method="POST">
-        <label>
-            Your Email:<br>
-            <input type="email" name="email" required placeholder="name@example.com">
-        </label><br><br>
-        
-        <label>
-            Your Message:<br>
+        <div>
+            <label>Your Email:</label><br>
+            <input type="email" name="_replyto" required placeholder="name@example.com">
+        </div>
+        <br>
+        <div>
+            <label>Your Message:</label><br>
             <textarea name="message" required placeholder="Write your message here..."></textarea>
-        </label><br><br>
-        
+        </div>
+        <br>
         <button type="submit">Send Email</button>
     </form>
 </body>
