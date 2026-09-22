@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Free Website</title>
+    <title>Contact rrzyxx</title>
 </head>
 <body>
     <h1>Welcome to my custom domain!</h1>
-    <p>This website is completely free and hosted on GitHub Pages.</p>
+    <p>Send me an email directly using the form below.</p>
+
+    <form action="https://formspree.io" method="POST">
+        <label>
+            Your Email:<br>
+            <input type="email" name="email" required placeholder="name@example.com">
+        </label><br><br>
+        
+        <label>
+            Your Message:<br>
+            <textarea name="message" required placeholder="Write your message here..."></textarea>
+        </label><br><br>
+        
+        <button type="submit">Send Email</button>
+    </form>
 </body>
 </html>
