@@ -1,206 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Photos</title>
+<style>
+  :root { --bg:#202124; --panel:#131314; --ink:#e8eaed; --muted:#9aa0a6; --line:#3c4043;
+          --active:#0b4a82; --hover:#2d2f33; --accent:#8ab4f8; --card:#2a2c30; }
+  :root[data-theme="light"] { --bg:#f6f8fc; --panel:#fff; --ink:#1f1f1f; --muted:#5f6368; --line:#dadce0;
+          --active:#d3e3fd; --hover:#e9eef6; --accent:#0b57d0; --card:#e3e7ec; }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; }
+  body { background:var(--bg); color:var(--ink); font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+         display:flex; flex-direction:column; }
+  svg { width:24px; height:24px; fill:currentColor; flex:none; }
+  button,a.ib { font:inherit; color:inherit; background:none; border:0; cursor:pointer; text-decoration:none; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 
-    <title>rrzyxx | Gaming Hub</title>
+  header { display:flex; align-items:center; gap:12px; padding:8px 16px; height:64px; }
+  .logo { font-size:1.35rem; font-weight:600; letter-spacing:.2px; min-width:150px; }
+  #menu { display:none; }
+  .ib { width:44px; height:44px; border-radius:50%; display:grid; place-items:center; color:var(--muted); }
+  .ib:hover { background:var(--hover); color:var(--ink); }
+  .search { flex:1; max-width:790px; display:flex; align-items:center; gap:12px; padding:0 16px; height:48px;
+            background:var(--hover); border-radius:24px; color:var(--muted); }
+  .search input { flex:1; background:none; border:0; color:var(--ink); font:inherit; font-size:1rem; outline:0; }
+  .tools { margin-left:auto; display:flex; align-items:center; gap:4px; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:var(--accent); color:var(--panel);
+            display:grid; place-items:center; font-weight:700; margin-left:8px; }
 
-    <meta name="description" content="GameZone - Your gaming hub for games, downloads and gaming content.">
+  .layout { flex:1; display:flex; min-height:0; }
+  nav { width:256px; padding:8px 12px; display:flex; flex-direction:column; overflow-y:auto; }
+  nav h2 { font-size:.9rem; font-weight:600; margin:20px 0 6px 20px; }
+  .nav { display:flex; align-items:center; gap:18px; width:100%; height:44px; padding:0 20px;
+         border-radius:22px; text-align:left; }
+  .nav:hover { background:var(--hover); }
+  .nav.on { background:var(--active); font-weight:600; }
+  .dot { margin-left:auto; width:10px; height:10px; border-radius:50%; background:#f28b82; }
+  .storage { margin-top:auto; padding:16px 8px 8px; border-top:1px solid var(--line); }
+  .bar { height:4px; border-radius:2px; background:var(--line); margin:12px 0 8px; overflow:hidden; }
+  .bar i { display:block; height:100%; width:0; background:var(--accent); }
+  .small { color:var(--muted); font-size:.85rem; }
 
-    <link rel="stylesheet" href="style.css">
+  main { flex:1; background:var(--panel); border-radius:16px; margin:0 16px 16px 0; padding:16px 18px; overflow-y:auto; }
+  main h3 { margin:0 0 12px; font-size:.95rem; font-weight:600; }
+  #grid { display:flex; flex-wrap:wrap; gap:4px; }
+  #grid::after { content:""; flex-grow:100; }
+  .tile { position:relative; height:auto; background:var(--card); overflow:hidden; flex:1 1 200px; }
+  .tile > button.open { display:block; width:100%; height:100%; padding:0; }
+  .tile img { display:block; width:100%; height:100%; object-fit:cover; }
+  .fav { position:absolute; top:6px; right:6px; width:36px; height:36px; border-radius:50%; color:#fff;
+         background:rgba(0,0,0,.45); display:grid; place-items:center; opacity:0; transition:opacity .15s; }
+  .tile:hover .fav, .fav.on, .fav:focus-visible { opacity:1; }
+  .fav.on { color:#f28b82; }
+  #msg { color:var(--muted); max-width:60ch; line-height:1.6; padding:16px 0; }
+
+  .del { position:absolute; top:6px; right:48px; width:36px; height:36px; border-radius:50%; color:#fff;
+         background:rgba(0,0,0,.45); display:grid; place-items:center; opacity:0; transition:opacity .15s; }
+  .tile:hover .del, .del:focus-visible { opacity:1; }
+  .play { position:absolute; left:8px; bottom:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,.55);
+          color:#fff; display:grid; place-items:center; pointer-events:none; }
+  .play svg { width:20px; height:20px; }
+  .tile video { display:block; width:100%; height:100%; object-fit:cover; }
+  #viewer video { max-width:92vw; max-height:90vh; }
+  #vdel { top:8px; right:60px; }
+  @media (hover:none) { .fav, .del { opacity:1; } }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#323232; color:#fff;
+           padding:12px 20px; border-radius:6px; display:none; max-width:90vw; z-index:30; }
+  #viewer { position:fixed; inset:0; background:rgba(0,0,0,.94); display:none; align-items:center; justify-content:center; z-index:20; }
+  #viewer.open { display:flex; }
+  #viewer img { max-width:92vw; max-height:90vh; }
+  #viewer .ib { position:absolute; color:#fff; }
+  #vclose { top:8px; left:8px; } #vprev { left:8px; } #vnext { right:8px; } #vfav { top:8px; right:8px; }
+  #vprev,#vnext { top:50%; margin-top:-22px; }
+
+  @media (max-width:800px) {
+    #menu { display:grid; } .logo { min-width:0; }
+    nav { position:fixed; z-index:15; top:64px; bottom:0; left:0; background:var(--bg); transform:translateX(-100%); transition:transform .2s; }
+    nav.open { transform:none; }
+    main { margin:0; border-radius:16px 16px 0 0; padding:12px; }
+    .tools .hide-m { display:none; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
 </head>
-
 <body>
-
-    <!-- NAVIGATION -->
-    <header class="navbar">
-
-        <div class="logo">
-            <span>🎮</span> rrzyxx
-        </div>
-
-        <nav>
-            <a href="#home">Home</a>
-            <a href="#games">Games</a>
-            <a href="#about">About</a>
-        </nav>
-
-        <button class="menu-btn" onclick="toggleMenu()">☰</button>
-
-    </header>
-
-
-    <!-- HERO -->
-    <section class="hero" id="home">
-
-        <div class="hero-content">
-
-            <p class="small-title">WELCOME TO</p>
-
-            <h1>
-                RATHUVARSHIKAN
-                <span>GAMING HUB</span>
-            </h1>
-
-            <p class="hero-text">
-                Discover games, explore gaming content and access
-                your favorite game files in one place.
-            </p>
-
-            <div class="hero-buttons">
-
-                <a href="#games" class="btn primary">
-                    🎮 Explore Games
-                </a>
-
-                <a href="#about" class="btn secondary">
-                    Learn More
-                </a>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- GAMES -->
-    <section class="games-section" id="games">
-
-        <div class="section-heading">
-
-            <p>OUR COLLECTION</p>
-
-            <h2>Featured Game</h2>
-
-        </div>
-
-
-        <!-- SEARCH -->
-        <div class="search-box">
-
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Search games..."
-                onkeyup="searchGames()"
-            >
-
-        </div>
-
-
-        <!-- GAME CARD -->
-        <div class="games-container" id="gamesContainer">
-
-            <article class="game-card">
-
-                <div class="game-image">
-                    🎮
-                </div>
-
-                <div class="game-info">
-
-                    <span class="game-category">
-                        GAME
-                    </span>
-
-                    <h3>My Game</h3>
-
-                    <p>
-                        Welcome to my gaming project.
-                        Click below to view the game PDF.
-                    </p>
-
-                    <div class="game-buttons">
-
-                        <a
-                            href="game.pdf"
-                            target="_blank"
-                            class="game-btn view-btn"
-                        >
-                            📖 View PDF
-                        </a>
-
-                        <a
-                            href="game.pdf"
-                            download
-                            class="game-btn download-btn"
-                        >
-                            ⬇ Download
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </article>
-
-        </div>
-
-    </section>
-
-
-    <!-- ABOUT -->
-    <section class="about-section" id="about">
-
-        <div class="about-content">
-
-            <p class="section-label">ABOUT US</p>
-
-            <h2>Welcome to rrzyxx</h2>
-
-            <p>
-                GameZone is a gaming website created for gamers.
-                Here you can discover games, gaming projects,
-                information and downloadable content.
-            </p>
-
-            <div class="stats">
-
-                <div class="stat">
-                    <strong>1+</strong>
-                    <span>Games</span>
-                </div>
-
-                <div class="stat">
-                    <strong>24/7</strong>
-                    <span>Access</span>
-                </div>
-
-                <div class="stat">
-                    <strong>FREE</strong>
-                    <span>Website</span>
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- FOOTER -->
-    <footer>
-
-        <div class="footer-logo">
-            🎮 GameZone
-        </div>
-
-        <p>
-            © 2026 GameZone. All rights reserved.
-        </p>
-
-        <div class="footer-links">
-            <a href="#home">Home</a>
-            <a href="#games">Games</a>
-            <a href="#about">About</a>
-        </div>
-
-    </footer>
-
-
-    <script src="script.js"></script>
-
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 4 0c0 2-3 1.750-3 5h2c0-2.250 3-2.500 3-5a4 4 0 0 0-4-4z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M19.400 13a7.500 7.500 0 0 0 0-2l2.100-1.600-2-3.500-2.500 1a7.400 7.400 0 0 0-1.700-1L15 3h-4l-.4 2.900a7.400 7.400 0 0 0-1.700 1l-2.500-1-2 3.500L6.600 11a7.500 7.500 0 0 0 0 2l-2.100 1.600 2 3.500 2.500-1c.5.400 1.100.7 1.700 1L11 21h4l.4-2.900c.6-.3 1.200-.6 1.700-1l2.500 1 2-3.500L19.400 13zM13 15.500a3.500 3.500 0 1 1 0-7 3.500 3.500 0 0 1 0 7z" transform="translate(-1 0)"/></symbol>
+  <symbol id="i-apps" viewBox="0 0 24 24"><path d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0-6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.500 13.500l2.500 3 3.500-4.500 4.500 6H5l3.500-4.500z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.100-1.600-5.600-4.500-6.300V4a1.500 1.500 0 0 0-3 0v.7C7.600 5.400 6 7.900 6 11v5l-2 2v1h16v-1l-2-2z"/></symbol>
+  <symbol id="i-album" viewBox="0 0 24 24"><path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM6 4h5v8l-2.500-1.500L6 12V4zm12 16H6v-2h12v2z" transform="translate(0 0)"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></symbol>
+  <symbol id="i-shot" viewBox="0 0 24 24"><path d="M17 1H7a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm0 18H7V5h10v14zM9 8h6v2H9V8z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M22 9.200l-7.200-.6L12 2 9.200 8.600 2 9.200l5.500 4.700L5.800 21l6.200-3.700 6.200 3.700-1.700-7.100L22 9.200zM12 15.400l-3.800 2.300 1-4.300-3.300-2.900 4.400-.4L12 6.100l1.700 4 4.400.4-3.300 2.900 1 4.300-3.800-2.300z"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM8.500 10a1.500 1.500 0 1 1 0 3 1.500 1.500 0 0 1 0-3zm7 0a1.500 1.500 0 1 1 0 3 1.500 1.500 0 0 1 0-3zM12 18c-2.300 0-4.200-1.400-5-3.400h10c-.8 2-2.700 3.400-5 3.400z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.300 7 13 7 13s7-7.700 7-13a7 7 0 0 0-7-7zm0 9.500a2.500 2.500 0 1 1 0-5 2.500 2.500 0 0 1 0 5z"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 14.500v-9l6 4.500-6 4.500z"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M19.350 10.040A7.490 7.490 0 0 0 12 4C9.110 4 6.600 5.640 5.350 8.040A5.994 5.994 0 0 0 0 14c0 3.310 2.690 6 6 6h13c2.760 0 5-2.240 5-5 0-2.640-2.050-4.780-4.650-4.960zM19 18H6a4 4 0 0 1 0-8h.7A5.500 5.500 0 0 1 12 6a5.500 5.500 0 0 1 5.400 4.500H19a3 3 0 0 1 0 6z" transform="translate(0 0)"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21l-1.500-1.300C5.400 15.400 2 12.300 2 8.500A4.500 4.500 0 0 1 6.500 4c1.700 0 3.400.8 4.500 2.100A6 6 0 0 1 15.500 4 4.500 4.500 0 0 1 20 8.500c0 3.800-3.400 6.900-8.500 11.200L12 21z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.400 17.600 5 12 10.600 6.400 5 5 6.400 10.600 12 5 17.600 6.400 19 12 13.400 17.600 19 19 17.600 13.400 12z"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M15.400 7.400 14 6l-6 6 6 6 1.400-1.400L10.800 12z"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M8.600 16.600 10 18l6-6-6-6-1.400 1.400 4.600 4.600z"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.5 0-.9-.1-1.300A5.500 5.500 0 0 1 13.300 3.100 9 9 0 0 0 12 3z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.500l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+  <symbol id="i-restore" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.900 3.900.1.100L9 12H6a7 7 0 1 1 2.100 5l-1.400 1.400A9 9 0 1 0 13 3zm-1 5v5l4.300 2.500.7-1.200-3.500-2.100V8H12z"/></symbol>
+</svg>
+
+<header>
+  <button class="ib" id="menu" aria-label="Open menu"><svg><use href="#i-menu"/></svg></button>
+  <div class="logo">My Photos</div>
+  <label class="search">
+    <svg><use href="#i-search"/></svg>
+    <input id="q" type="search" placeholder="Search your photos" aria-label="Search your photos">
+  </label>
+  <div class="tools">
+    <a class="ib" id="upload" target="_blank" rel="noopener" title="Upload photos on GitHub" aria-label="Upload photos"><svg><use href="#i-plus"/></svg></a>
+    <button class="ib hide-m" id="help" title="Help" aria-label="Help"><svg><use href="#i-help"/></svg></button>
+    <button class="ib" id="theme" title="Light or dark" aria-label="Switch light or dark theme"><svg><use href="#i-theme"/></svg></button>
+    <button class="ib hide-m" id="apps" title="Apps" aria-label="Apps"><svg><use href="#i-apps"/></svg></button>
+    <div class="avatar" id="avatar" aria-hidden="true">R</div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav id="nav" aria-label="Main">
+    <button class="nav on" data-view="photos"><svg><use href="#i-photo"/></svg>Photos</button>
+    <button class="nav" data-soon="Updates"><svg><use href="#i-bell"/></svg>Updates<span class="dot"></span></button>
+    <h2>Collections</h2>
+    <button class="nav" data-soon="Albums"><svg><use href="#i-album"/></svg>Albums</button>
+    <button class="nav" data-soon="Documents"><svg><use href="#i-doc"/></svg>Documents</button>
+    <button class="nav" data-soon="Screenshots"><svg><use href="#i-shot"/></svg>Screenshots</button>
+    <button class="nav" data-view="favs"><svg><use href="#i-star"/></svg>Favourites</button>
+    <button class="nav" data-soon="People and pets"><svg><use href="#i-people"/></svg>People and pets</button>
+    <button class="nav" data-soon="Places"><svg><use href="#i-pin"/></svg>Places</button>
+    <button class="nav" data-view="videos"><svg><use href="#i-video"/></svg>Videos</button>
+    <button class="nav" data-view="bin"><svg><use href="#i-trash"/></svg>Bin</button>
+    <div class="storage">
+      <div class="nav" style="padding:0 12px;cursor:default"><svg><use href="#i-cloud"/></svg>Storage</div>
+      <div class="bar"><i id="barfill"></i></div>
+      <div class="small" id="storetext">Checking storage…</div>
+    </div>
+  </nav>
+
+  <main>
+    <h3 id="title">All photos</h3>
+    <p class="small" id="binnote" style="display:none;margin:0 0 12px">Items here are only hidden in this browser. To delete one forever, use the delete button on the photo and remove the file on GitHub.</p>
+    <div id="grid"></div>
+    <p id="msg">Loading photos…</p>
+  </main>
+</div>
+
+<div id="toast" role="status"></div>
+<div id="viewer" role="dialog" aria-label="Photo viewer">
+  <button class="ib" id="vclose" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+  <button class="ib" id="vfav" aria-label="Favourite"><svg><use href="#i-heart"/></svg></button>
+  <button class="ib" id="vdel" aria-label="Move to bin"><svg><use href="#i-trash"/></svg></button>
+  <button class="ib" id="vprev" aria-label="Previous"><svg><use href="#i-prev"/></svg></button>
+  <img id="big" alt=""><video id="bigv" controls playsinline style="display:none"></video>
+  <button class="ib" id="vnext" aria-label="Next"><svg><use href="#i-next"/></svg></button>
+</div>
+
+<script>
+  // ===== Change these 2 lines =====
+  const GITHUB_USER = "YOUR-GITHUB-USERNAME";
+  const GITHUB_REPO = "YOUR-REPO-NAME";
+  // ================================
+  const FOLDER = "photos", LIMIT_MB = 1024;
+  const $ = id => document.getElementById(id);
+  let all = [], list = [], cur = 0, view = "photos", favs = new Set(), bin = new Set();
+
+  try { favs = new Set(JSON.parse(localStorage.getItem("favs") || "[]")); } catch (e) {}
+  try { bin = new Set(JSON.parse(localStorage.getItem("bin") || "[]")); } catch (e) {}
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  const saveFavs = () => { try { localStorage.setItem("favs", JSON.stringify([...favs])); } catch (e) {} };
+
+  function toast(t) { const el = $("toast"); el.textContent = t; el.style.display = "block";
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", 3200); }
+
+  $("upload").href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/upload/main/${FOLDER}`;
+  $("help").onclick = () => toast("To add photos: click +, upload to the photos folder, then commit.");
+  $("apps").onclick = () => toast("Apps: coming soon.");
+  $("theme").onclick = () => {
+    const r = document.documentElement, next = r.dataset.theme === "light" ? "dark" : "light";
+    r.dataset.theme = next; try { localStorage.setItem("theme", next); } catch (e) {}
+  };
+  $("menu").onclick = () => $("nav").classList.toggle("open");
+  document.querySelectorAll(".nav[data-soon]").forEach(b => b.onclick = () => toast(b.dataset.soon + ": coming soon."));
+  document.querySelectorAll(".nav[data-view]").forEach(b => b.onclick = () => {
+    document.querySelectorAll(".nav").forEach(n => n.classList.remove("on"));
+    b.classList.add("on"); view = b.dataset.view; $("nav").classList.remove("open"); render();
+  });
+  $("q").addEventListener("input", render);
+
+  const isVid = n => /\.(mp4|webm|mov|m4v)$/i.test(n);
+  const ghFile = n => `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/blob/main/${FOLDER}/${encodeURIComponent(n)}`;
+  const saveBin = () => { try { localStorage.setItem("bin", JSON.stringify([...bin])); } catch (e) {} };
+  const TITLES = { photos: "All photos", videos: "Videos", favs: "Favourites", bin: "Bin" };
+
+  function btn(cls, label, icon, fn) {
+    const b = document.createElement("button"); b.className = cls; b.title = label;
+    b.setAttribute("aria-label", label); b.innerHTML = `<svg><use href="${icon}"/></svg>`; b.onclick = fn; return b;
+  }
+
+  function render() {
+    const q = $("q").value.trim().toLowerCase();
+    list = all.filter(p => {
+      const inBin = bin.has(p.name);
+      if (!p.name.toLowerCase().includes(q)) return false;
+      if (view === "bin") return inBin;
+      if (inBin) return false;
+      if (view === "videos") return p.video;
+      if (view === "favs") return favs.has(p.name);
+      return true;
+    });
+    $("title").textContent = TITLES[view];
+    $("grid").textContent = "";
+    $("binnote").style.display = view === "bin" && list.length ? "block" : "none";
+    $("msg").style.display = list.length ? "none" : "block";
+    if (!list.length) $("msg").textContent = !all.length ? ($("msg").dataset.base || "No photos yet.") :
+      q ? "Nothing matches your search." :
+      view === "favs" ? "No favourites yet. Tap the heart on a photo." :
+      view === "videos" ? "No videos yet. Upload .mp4 or .webm files to the photos folder." :
+      view === "bin" ? "Bin is empty." : "No photos yet.";
+    list.forEach((p, i) => {
+      const t = document.createElement("div"); t.className = "tile";
+      const size = a => { a = a || 1.5; t.style.flex = `${a * 100} 1 ${a * 220}px`; t.style.aspectRatio = a; };
+      size(1.5);
+      const open = document.createElement("button"); open.className = "open"; open.setAttribute("aria-label", "Open " + p.name);
+      let el;
+      if (p.video) {
+        el = document.createElement("video"); el.muted = true; el.preload = "metadata"; el.src = p.src + "#t=0.1";
+        el.onloadedmetadata = () => size(el.videoWidth / el.videoHeight);
+      } else {
+        el = new Image(); el.src = p.src; el.alt = p.name; el.loading = "lazy";
+        el.onload = () => size(el.naturalWidth / el.naturalHeight);
+      }
+      open.appendChild(el);
+      if (p.video) open.insertAdjacentHTML("beforeend", '<span class="play"><svg><use href="#i-video"/></svg></span>');
+      open.onclick = () => show(i);
+      t.appendChild(open);
+      if (view === "bin") {
+        t.append(
+          btn("fav", "Restore", "#i-restore", () => { bin.delete(p.name); saveBin(); render(); }),
+          btn("del", "Delete forever (on GitHub)", "#i-trash", () => {
+            window.open(ghFile(p.name), "_blank", "noopener");
+            toast("On GitHub, click the three dots, then Delete file.");
+          }));
+      } else {
+        t.append(
+          btn("fav" + (favs.has(p.name) ? " on" : ""), "Favourite", "#i-heart", e => {
+            toggleFav(p.name); e.currentTarget.classList.toggle("on"); if (view === "favs") render();
+          }),
+          btn("del", "Move to bin", "#i-trash", () => { bin.add(p.name); saveBin(); render(); toast("Moved to bin"); }));
+      }
+      $("grid").appendChild(t);
+    });
+  }
+  function toggleFav(n) { favs.has(n) ? favs.delete(n) : favs.add(n); saveFavs(); }
+
+  function show(i) {
+    cur = (i + list.length) % list.length; const p = list[cur];
+    const v = $("bigv"), im = $("big");
+    v.pause();
+    if (p.video) { im.style.display = "none"; v.style.display = "block"; v.src = p.src; v.play().catch(() => {}); }
+    else { v.style.display = "none"; v.removeAttribute("src"); im.style.display = "block"; im.src = p.src; im.alt = p.name; }
+    $("vfav").style.color = favs.has(p.name) ? "#f28b82" : "#fff";
+    $("vdel").style.display = view === "bin" ? "none" : "grid";
+    $("viewer").classList.add("open");
+  }
+  function hide() {
+    $("viewer").classList.remove("open"); $("big").removeAttribute("src");
+    const v = $("bigv"); v.pause(); v.removeAttribute("src"); render();
+  }
+  $("vclose").onclick = hide;
+  $("vprev").onclick = () => show(cur - 1);
+  $("vnext").onclick = () => show(cur + 1);
+  $("vfav").onclick = () => { toggleFav(list[cur].name); $("vfav").style.color = favs.has(list[cur].name) ? "#f28b82" : "#fff"; };
+  $("vdel").onclick = () => { bin.add(list[cur].name); saveBin(); render(); toast("Moved to bin"); list.length ? show(cur) : hide(); };
+  $("viewer").addEventListener("click", e => { if (e.target === $("viewer")) hide(); });
+  document.addEventListener("keydown", e => {
+    if (!$("viewer").classList.contains("open")) return;
+    if (e.key === "Escape") hide();
+    if (e.key === "ArrowLeft") show(cur - 1);
+    if (e.key === "ArrowRight") show(cur + 1);
+  });
+
+  async function load() {
+    const api = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}`;
+    try {
+      const res = await fetch(`${api}/contents/${FOLDER}`);
+      if (!res.ok) throw new Error(res.status);
+      const files = await res.json();
+      all = files.filter(f => /\.(jpe?g|png|gif|webp|avif|mp4|webm|mov|m4v)$/i.test(f.name))
+        .sort((a, b) => b.name.localeCompare(a.name))
+        .map(f => ({ name: f.name, src: `${FOLDER}/${encodeURIComponent(f.name)}`, video: isVid(f.name) }));
+      $("msg").dataset.base = "No photos yet. Click + to upload pictures to the photos folder.";
+      render();
+    } catch (e) {
+      $("msg").textContent = "Could not load photos. Check GITHUB_USER and GITHUB_REPO, make sure the repo is public and has a photos folder.";
+    }
+    try {
+      const r = await (await fetch(api)).json();
+      const mb = (r.size || 0) / 1024;
+      $("barfill").style.width = Math.min(100, mb / LIMIT_MB * 100) + "%";
+      $("storetext").textContent = `${mb.toFixed(1)} MB of 1 GB used`;
+    } catch (e) { $("storetext").textContent = "Storage unavailable"; }
+  }
+  load();
+</script>
 </body>
 </html>
